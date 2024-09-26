@@ -1,29 +1,7 @@
 <template>
   <main class="main-content mx-auto flex max-w-300 flex-col gap-2.5 px-1 pt-9 px-5 lg:flex-row">
+<!--    <div>去水印（涂抹水印所在区域）</div>-->
     <section class="editor">
-<!--      <div class="sidebar w-40 hidden lg:flex">-->
-<!--        <div class="color-picker">-->
-<!--          <h3 class="ml-1">Color</h3>-->
-<!--          <div class="colors">-->
-<!--            <div-->
-<!--              class="color cursor-pointer"-->
-<!--              :style="{ backgroundColor: `rgb(${item[0]},${item[1]},${item[2]})` }"-->
-<!--              v-for="(item, index) in colorArr"-->
-<!--              :key="index"-->
-<!--              @click="changeColor(item)"-->
-<!--            ></div>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--        <div class="picture-picker">-->
-<!--          <h3 class="ml-5">Picture</h3>-->
-<!--          <div class="pictures">-->
-<!--            <div class="picture" v-for="(item, index) in bgArr" :key="index">-->
-<!--              <img :src="item" class="w-full h-full" @click="handlePicClick(item)" />-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </div>-->
-
       <div>
         <section class="toolbar whitespace-nowrap justify-between lg:justify-center">
           <el-radio-group v-model="compare" @change="handleRadioChange">
@@ -40,7 +18,7 @@
               type="primary"
               class="flex h-[44px] lg:w-[144px] items-center justify-center text-4 text-white transition"
             >
-              Re-Upload
+              Upload
             </el-button>
           </el-upload>
           <div class="tools items-center fixed right-4 top-6 lg:static">
@@ -56,26 +34,27 @@
               class="mr-2.5 cursor-pointer"
               @click="handleZoomIn"
             ></svg-icon>
-            <el-divider direction="vertical" class="h-7 border-#888"></el-divider>
-            <svg-icon
-              name="chehui"
-              :icon-style="{ height: '30px', width: '30px' }"
-              class="mx-2.5 cursor-pointer"
-              :class="{ 'opacity-20%': isRecallDisable }"
-              @click="handleRecall"
-            ></svg-icon>
+<!--            <el-divider direction="vertical" class="h-7 border-#888"></el-divider>-->
+<!--            <svg-icon-->
+<!--              name="chehui"-->
+<!--              :icon-style="{ height: '30px', width: '30px' }"-->
+<!--              class="mx-2.5 cursor-pointer"-->
+<!--              :class="{ 'opacity-20%': isRecallDisable }"-->
+<!--              @click="handleRecall"-->
+<!--            ></svg-icon>-->
 
-            <svg-icon
-              name="zhongzuo"
-              :icon-style="{ height: '30px', width: '30px' }"
-              class="cursor-pointer"
-              :class="{ 'opacity-20%': isRedoDisable }"
-              @click="handleRedo"
-            ></svg-icon>
+<!--            <svg-icon-->
+<!--              name="zhongzuo"-->
+<!--              :icon-style="{ height: '30px', width: '30px' }"-->
+<!--              class="cursor-pointer"-->
+<!--              :class="{ 'opacity-20%': isRedoDisable }"-->
+<!--              @click="handleRedo"-->
+<!--            ></svg-icon>-->
           </div>
         </section>
-        <div class="canvas-container">
+        <div class="canvas-container pos-relative">
           <canvas id="canvas" ref="canvasRef"></canvas>
+          <canvas class="pos-absolute top-0 left-0" id="deMark" ref="deMarkRef" ></canvas>
         </div>
         <div class="lg:hidden mt-5 flex justify-evenly">
           <div
@@ -94,35 +73,42 @@
           </div>
         </div>
 
-        <p class="my-20 whitespace-pre-wrap text-center text-14px font-medium text-[#777777ee]">
-          Don't forget to download your file. Auto-deletes in 30 minutes.
-        </p>
+<!--        <p class="my-20 whitespace-pre-wrap text-center text-14px font-medium text-[#777777ee]">-->
+<!--          Don't forget to download your file. Auto-deletes in 30 minutes.-->
+<!--        </p>-->
       </div>
       <div class="sidebar w-75 hidden lg:block">
-        <div class="flex flex-row items-center gap-5">
-          <el-button
-            class="h-[60px] w-[135px] border border-black text-5 text-black fw-600"
-            :type="isErase ? 'primary' : 'default'"
-            :class="{'text-white': isErase }"
-            @click="handleEraseClick"
-          >Erase
-          </el-button>
-          <el-button
-            class="h-[60px] w-[135px]  border border-black text-5 text-black fw-600"
-            :type="isRestore ? 'primary' : 'default'"
-            :class="{ 'text-white': isRestore }"
-            @click="handleRestoreClick"
-          >Restore
-          </el-button>
-        </div>
-
-        <div class="mt-20 w-full">
-          <h3 class="text-5 text-#000 text-center">Brush Size</h3>
-          <el-slider v-model="brushSize" size="large" :show-tooltip="false" :min="10" :max="50" class="w-full" />
-        </div>
-        <el-button type="primary" class="mt-24 text-6 h-22 w-75" @click="downloadImage">Download HD free</el-button>
+<!--        <div class="flex flex-row items-center gap-5">-->
+<!--          <el-button-->
+<!--            class="h-[60px] w-[135px] border border-black text-5 text-black fw-600"-->
+<!--            :type="isErase ? 'primary' : 'default'"-->
+<!--            :class="{'text-white': isErase }"-->
+<!--            @click="handleEraseClick"-->
+<!--          >Erase-->
+<!--          </el-button>-->
+<!--          <el-button-->
+<!--            class="h-[60px] w-[135px]  border border-black text-5 text-black fw-600"-->
+<!--            :type="isRestore ? 'primary' : 'default'"-->
+<!--            :class="{ 'text-white': isRestore }"-->
+<!--            @click="handleRestoreClick"-->
+<!--          >Restore-->
+<!--          </el-button>-->
+<!--        </div>-->
+<!--        <el-button-->
+<!--          class="h-[60px] w-[135px]  border border-black text-5 text-black fw-600"-->
+<!--          :type="isRestore ? 'primary' : 'default'"-->
+<!--          :class="{ 'text-white': isRestore }"-->
+<!--          @click="sureRemoveArea"-->
+<!--        >生成照片-->
+<!--        </el-button>-->
+<!--        <div class="mt-20 w-full">-->
+<!--          <h3 class="text-5 text-#000 text-center">Brush Size</h3>-->
+<!--          <el-slider v-model="brushSize" size="large" :show-tooltip="false" :min="5" :max="50" class="w-full" />-->
+<!--        </div>-->
+        <el-button type="primary" class="mt-24 text-6 h-22 w-75" @click="downLoad">{{ downloadImg? 'Download HD free':'生成照片' }}</el-button>
         <p class="mt-4 text-center text-18px fw-900 text-[#777777]">Full {{ w + "*" + h }}</p>
       </div>
+
     </section>
 
     <!--    <el-drawer v-model="colorDrawerVisible" direction="btt" :show-close="false" :with-header="false">-->
@@ -147,19 +133,20 @@ import bg3 from "@/assets/images/detail/bg-3.jpg";
 import bg4 from "@/assets/images/detail/bg-4.jpg";
 import bg5 from "@/assets/images/detail/bg-5.jpg";
 
-import useFile, { Action } from "@/hooks/useFile";
+import useFile, { Action } from "@/hooks/userDe";
 import useSnapshot from "@/hooks/useSnapshot";
 // import {removeBackGround} from "@/api/modules/ai"
 
 const { handleAction } = useFile();
-const { getLastDrawData, getLength, pushDrawData, clearDrawData, popDrawData } = useSnapshot("drawStack");
+const { getLength, pushDrawData, clearDrawData, popDrawData } = useSnapshot("drawDeMark");
+const { getLastDrawData,getDrawData} = useSnapshot("deMark");
 const {
   getLastDrawData: getSubLastDrawData,
   getLength: getSubLength,
   pushDrawData: pushSubDrawData,
   popDrawData: popSubDrawData,
   clearDrawData: clearSubData
-} = useSnapshot("subStack");
+} = useSnapshot("subDeMark");
 
 const bgArr = [bg1, bg2, bg3, bg4, bg5];
 
@@ -188,6 +175,8 @@ const toolbar = [
 
 const colorDrawerVisible = ref(false);
 
+const downloadImg = ref(true)
+
 const handleToolbarClick = type => {
   if (type == "Download") {
     downloadImage();
@@ -209,21 +198,21 @@ const compare = ref("after");
 const brushSize = ref(30);
 onMounted(async () => {
 
-  // index静态图片 from上传图片
-  const { index, from } = route.query;
-
-  await clearSubData();
-  if (from) {
-    renderCanvas();
-  } else {
-    // 清理数据
-    await clearDrawData();
-  }
-
-  if (index) readImportedImage(imgArr[index], Action["UPLOAD"]);
-  document.addEventListener("dragenter", handleDragEnter);
-  document.addEventListener("dragover", handleDragOver);
-  document.addEventListener("dragleave", hanleDragLeave);
+  // // index静态图片 from上传图片
+  // const { index, from } = route.query;
+  //
+  // await clearSubData();
+  // if (from) {
+  //   renderCanvas();
+  // } else {
+  //   // 清理数据
+  //   await clearDrawData();
+  // }
+  //
+  // if (index) readImportedImage(imgArr[index], Action["UPLOAD"]);
+  // document.addEventListener("dragenter", handleDragEnter);
+  // document.addEventListener("dragover", handleDragOver);
+  // document.addEventListener("dragleave", hanleDragLeave);
 });
 
 const isMask = ref(false);
@@ -266,9 +255,18 @@ const readImportedImage = (img, action) => {
 
 /* upload */
 const handleBeforeUpload = file => {
-  handleAction(file, Action["UPLOAD"], renderCanvas);
+  handleAction(file, Action["UPLOAD"], renderBefore);
   return false;
 };
+
+const sureRemoveArea = () => {
+
+  const canvas = deMarkRef.value;
+  const link = document.createElement("a");
+  link.href = canvas.toDataURL("image/png");
+  link.download = "cropped-image.png";
+  link.click();
+}
 
 /* radio */
 const handleRadioChange = val => {
@@ -283,12 +281,14 @@ const handleZoomIn = () => {
   scale += 0.1;
   const canvas = canvasRef.value;
   canvas.style.transform = `scale(${scale})`;
+  deMarkRef.value.style.transform = `scale(${scale})`;
 };
 
 const handleZoomOut = () => {
   scale -= 0.1;
   const canvas = canvasRef.value;
   canvas.style.transform = `scale(${scale})`;
+  deMarkRef.value.style.transform = `scale(${scale})`;
 };
 
 /* color */
@@ -314,15 +314,18 @@ const handlePicClick = item => {
 
 /* canvas */
 const canvasRef = ref();
+/* 涂抹图层canvas */
+const deMarkRef = ref()
 
 const w = ref(0);
 const h = ref(0);
 
 const renderBefore = async () => {
   const { main } = await getLastDrawData();
-
   const canvas = canvasRef.value;
+  const canvasDeMark = deMarkRef.value;
   const ctx = canvas.getContext("2d");
+  ctx.save();
   const mainImage = new Image();
   mainImage.src = main;
   await imgLoaded(mainImage);
@@ -333,6 +336,9 @@ const renderBefore = async () => {
   h.value = canvasHeight;
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
+
+  canvasDeMark.width = canvasWidth;
+  canvasDeMark.height = canvasHeight;
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
@@ -472,13 +478,14 @@ const renderCanvasWithBg = async (main, mask, color, draw, bg, restore) => {
 
 const renderCanvasNormal = async (main, mask, color, draw, bg, restore) => {
   const canvas = canvasRef.value;
+  // console.log( '221122121122222222' );
   const ctx = canvas.getContext("2d");
-  const maskImage = new Image();
+  // const maskImage = new Image();
   const mainImage = new Image();
-  maskImage.src = mask;
+  // maskImage.src = mask;
   mainImage.src = main;
-
-  await Promise.all([imgLoaded(maskImage), imgLoaded(mainImage)]);
+  await imgLoaded(mainImage)
+  // await Promise.all([imgLoaded(maskImage), imgLoaded(mainImage)]);
 
   const canvasWidth = mainImage.width;
   const canvasHeight = mainImage.height;
@@ -492,7 +499,6 @@ const renderCanvasNormal = async (main, mask, color, draw, bg, restore) => {
   const mainAspectRatio = mainImage.width / mainImage.height;
   const canvasAspectRatio = canvasWidth / canvasHeight;
   let drawWidth, drawHeight, offsetX, offsetY;
-
   // 缩放
   if (mainAspectRatio > canvasAspectRatio) {
     drawWidth = canvasWidth;
@@ -506,14 +512,14 @@ const renderCanvasNormal = async (main, mask, color, draw, bg, restore) => {
     offsetY = 0;
   }
 
-  ctx.drawImage(maskImage, offsetX, offsetY, drawWidth, drawHeight);
+  ctx.drawImage(mainImage,canvas.width, canvas.height);
 
   const mainImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const copyData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(maskImage, offsetX, offsetY, drawWidth, drawHeight);
-
-  const maskImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
+  // const copyData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  // ctx.drawImage(maskImage, offsetX, offsetY, drawWidth, drawHeight);
+  //
+  // const maskImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  //
   // for (let i = 0; i < mainImageData.data.length; i += 4) {
   //   if (maskImageData.data[i] === 0 && maskImageData.data[i + 1] === 0) {
   //     if (color) {
@@ -591,6 +597,7 @@ const isRecallDisable = ref(false);
 const isRedoDisable = ref(true);
 
 async function renderCanvas(flag?) {
+
   let target;
   // flag判断是否撤回
   if (flag) {
@@ -611,11 +618,7 @@ async function renderCanvas(flag?) {
     isRecallDisable.value = false;
   }
   const { main, mask, color, draw, bg, restore } = target;
-  console.log(target,'jinrujiem');
-
-  if (bg) {
-    renderCanvasWithBg(main, mask, color, draw, bg, restore);
-  } else renderCanvasNormal(main, mask, color, draw, bg, restore);
+  renderCanvasNormal(main, mask, color, draw, bg, restore);
 }
 
 const imgLoaded = (img): Promise<void> => {
@@ -625,6 +628,14 @@ const imgLoaded = (img): Promise<void> => {
     };
   });
 };
+
+/**
+ * 下载图片
+ */
+function downLoad(){
+  // 生成照片 下载生成后的照片
+  downloadImg.value ? downloadImage():sureRemoveArea()
+}
 
 function downloadImage() {
   const canvas = canvasRef.value;
@@ -652,7 +663,7 @@ const isRestore = ref(false);
 const handleEraseClick = () => {
   isRestore.value = false;
   isErase.value = !isErase.value;
-  const canvas = canvasRef.value;
+  const canvas = deMarkRef.value;
   if (isErase.value) {
     canvas.addEventListener("mousedown", mouseHandler);
   } else {
@@ -670,14 +681,17 @@ const getClipArea = (canvas, e) => {
 let path = [];
 
 function mouseHandler(e) {
-  const canvas = canvasRef.value;
+  const canvas = deMarkRef.value;
   const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high'; // 可以设置为 'low', 'medium', 或 'high'
   e.preventDefault();
   if (e.type == "mousedown") {
+    ctx.save();
     path = [];
     canvas.addEventListener("mousemove", mouseHandler);
     canvas.addEventListener("mouseup", mouseHandler);
-    ctx.strokeStyle = "#5e6ff022";
+    ctx.strokeStyle = isErase.value?"#000000":'red';
 
     ctx.lineWidth = brushSize.value; // 设置画笔宽度
     ctx.lineCap = "round"; // 设置线条端点样式
@@ -689,16 +703,26 @@ function mouseHandler(e) {
 
     ctx.moveTo(x, y);
     path.push({ x, y });
+
   } else if (e.type === "mouseup" || e.type === "mouseout") {
     canvas.removeEventListener("mousemove", mouseHandler);
     canvas.removeEventListener("mouseup", mouseHandler);
     //draw
-    if (isErase.value) {
-      handleAction({ path, brush: brushSize.value }, Action["DRAW"], renderCanvas);
-    } else {
-      handleAction({ path, brush: brushSize.value }, Action["RESTORE"], renderCanvas);
-    }
+    // if (isErase.value) {
+    //   handleAction({ path, brush: brushSize.value }, Action["DRAW"], renderCanvas);
+    // } else {
+    //   handleAction({ path, brush: brushSize.value }, Action["RESTORE"], renderCanvas);
+    // }
   } else {
+    if(isRestore.value){
+      console.log(1111111111111);
+      ctx.globalAlpha = 0.1; // 可以调整透明度
+      ctx.globalCompositeOperation = 'destination-out';
+    }else{
+      console.log(222222222222222);
+      ctx.globalAlpha = 0.9; // 可以调整透明度
+      ctx.globalCompositeOperation = 'source-over'
+    }
     const { x, y } = getClipArea(canvas, e);
     ctx.lineTo(x, y);
     ctx.stroke();
@@ -709,7 +733,7 @@ function mouseHandler(e) {
 const handleRestoreClick = () => {
   isErase.value = false;
   isRestore.value = !isRestore.value;
-  const canvas = canvasRef.value;
+  const canvas = deMarkRef.value;
 
   if (isRestore.value) {
     canvas.addEventListener("mousedown", mouseHandler);

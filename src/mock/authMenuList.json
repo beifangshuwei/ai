@@ -43,6 +43,20 @@
         "isKeepAlive": true
       }
     },
+    {
+      "path": "/deWatermark",
+      "name": "deWatermark",
+      "component": "/deWatermark/index",
+      "meta": {
+        "icon": "code-computer",
+        "title": "detail",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": true,
+        "isKeepAlive": true
+      }
+    },
 
     {
       "path": "/icon",

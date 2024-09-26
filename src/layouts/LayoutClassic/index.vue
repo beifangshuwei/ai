@@ -3,7 +3,7 @@
   <section class="flex flex-col h-full">
     <header class=" h-17 shrink-0 flex w-full  shadow-md  bg-white backdrop-filter backdrop-blur-lg bg-opacity-50 justify-between items-center sm:px-4 md:px-4">
 
-      <img @click="getUrlClick('home')" class="h-6" src="https://assets.dewatermark.ai/images/watermark-remover/header_logo_new.webp" alt="" />
+      <img @click="changeUrl('home')" class="h-6" src="https://assets.dewatermark.ai/images/watermark-remover/header_logo_new.webp" alt="" />
       <div class="flex static items-center ">
 <!--        <el-button class="mr-10 lg:mr-20 fw-800 text-16px border-black" @click="getUrlClick('this-person-does-not-exist')">生成人脸</el-button>-->
 <!--        <button class="flex bg-transparent border-transparent sm+:hover:bg-gray-200 mr-8 justify-between items-center">-->
@@ -38,6 +38,11 @@
             </button>
           </p>
         </div>
+        <el-button
+          class=" lg:flex items-center justify-center rounded-[8px] border border-black fw-800  lg:w-[100px]   text-16px transition"
+          @click="changeUrl('deWatermark')"
+        >去水印
+        </el-button>
         <el-button
           class=" lg:flex items-center justify-center rounded-[8px] border border-black fw-800  lg:w-[100px]   text-16px transition"
           @click="dialogVisible = true"
@@ -89,7 +94,7 @@ const callback = (response) => {
 }
 
 // 菜单跳转路由
-function getUrlClick(url) {
+function changeUrl(url) {
 //跳转
 router.push({ path: `/${url}` });
 }

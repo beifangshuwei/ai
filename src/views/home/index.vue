@@ -9,7 +9,7 @@
         <div class="images mt-5 lg:mt-0 w-full">
           <el-upload
             :before-upload="handleBeforeUpload"
-            action="http://192.168.110.244:8082/user/img/updateImg"
+            action="https://ai.photoes.ai/user/img/updateImg"
             :show-file-list="false"
             :limit="1"
             class="w-full"
