@@ -71,6 +71,58 @@
         "isAffix": true,
         "isKeepAlive": true
       }
+    },  {
+      "path": "/policy",
+      "name": "Policy",
+      "component": "/footer/policyx",
+      "meta": {
+        "icon": "MapLocation",
+        "title": "icon",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": true,
+        "isKeepAlive": true
+      }
+    },  {
+      "path": "/about-us",
+      "name": "about-us",
+      "component": "/footer/aboutUs",
+      "meta": {
+        "icon": "MapLocation",
+        "title": "icon",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": true,
+        "isKeepAlive": true
+      }
+    },  {
+      "path": "/term-of-service",
+      "name": "term-of-service",
+      "component": "/footer/term",
+      "meta": {
+        "icon": "MapLocation",
+        "title": "icon",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": true,
+        "isKeepAlive": true
+      }
+    },  {
+      "path": "/contact-us",
+      "name": "contact-us",
+      "component": "/footer/contactUs",
+      "meta": {
+        "icon": "MapLocation",
+        "title": "icon",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": true,
+        "isKeepAlive": true
+      }
     }
   ],
   "msg": "成功"

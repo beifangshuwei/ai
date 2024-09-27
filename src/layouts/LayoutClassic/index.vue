@@ -48,9 +48,7 @@
     </header>
     <el-container class="flex-1 flex flex-col overflow-auto">
       <Main class="bg" />
-      <footer class="100px">&nbsp;
-      111
-      </footer>
+
     </el-container>
   </section>
   <el-dialog v-model="dialogVisible"  width="300">
