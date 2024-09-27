@@ -1,28 +1,28 @@
 <template>
   <main class="main-content mx-auto flex max-w-300 flex-col gap-2.5 px-1 pt-9 px-5 lg:flex-row">
     <section class="editor">
-<!--      <div class="sidebar w-40 hidden lg:flex">-->
-<!--        <div class="color-picker">-->
-<!--          <h3 class="ml-1">Color</h3>-->
-<!--          <div class="colors">-->
-<!--            <div-->
-<!--              class="color cursor-pointer"-->
-<!--              :style="{ backgroundColor: `rgb(${item[0]},${item[1]},${item[2]})` }"-->
-<!--              v-for="(item, index) in colorArr"-->
-<!--              :key="index"-->
-<!--              @click="changeColor(item)"-->
-<!--            ></div>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--        <div class="picture-picker">-->
-<!--          <h3 class="ml-5">Picture</h3>-->
-<!--          <div class="pictures">-->
-<!--            <div class="picture" v-for="(item, index) in bgArr" :key="index">-->
-<!--              <img :src="item" class="w-full h-full" @click="handlePicClick(item)" />-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </div>-->
+      <!--      <div class="sidebar w-40 hidden lg:flex">-->
+      <!--        <div class="color-picker">-->
+      <!--          <h3 class="ml-1">Color</h3>-->
+      <!--          <div class="colors">-->
+      <!--            <div-->
+      <!--              class="color cursor-pointer"-->
+      <!--              :style="{ backgroundColor: `rgb(${item[0]},${item[1]},${item[2]})` }"-->
+      <!--              v-for="(item, index) in colorArr"-->
+      <!--              :key="index"-->
+      <!--              @click="changeColor(item)"-->
+      <!--            ></div>-->
+      <!--          </div>-->
+      <!--        </div>-->
+      <!--        <div class="picture-picker">-->
+      <!--          <h3 class="ml-5">Picture</h3>-->
+      <!--          <div class="pictures">-->
+      <!--            <div class="picture" v-for="(item, index) in bgArr" :key="index">-->
+      <!--              <img :src="item" class="w-full h-full" @click="handlePicClick(item)" />-->
+      <!--            </div>-->
+      <!--          </div>-->
+      <!--        </div>-->
+      <!--      </div>-->
 
       <div>
         <section class="toolbar whitespace-nowrap justify-between lg:justify-center">
@@ -76,6 +76,7 @@
         </section>
         <div class="canvas-container">
           <canvas id="canvas" ref="canvasRef"></canvas>
+<!--          <canvas id="markCanvas" ref="markRef"></canvas>-->
         </div>
         <div class="lg:hidden mt-5 flex justify-evenly">
           <div
@@ -94,9 +95,9 @@
           </div>
         </div>
 
-        <p class="my-20 whitespace-pre-wrap text-center text-14px font-medium text-[#777777ee]">
-          Don't forget to download your file. Auto-deletes in 30 minutes.
-        </p>
+<!--        <p class="my-20 whitespace-pre-wrap text-center text-14px font-medium text-[#777777ee]">-->
+<!--          Don't forget to download your file. Auto-deletes in 30 minutes.-->
+<!--        </p>-->
       </div>
       <div class="sidebar w-75 hidden lg:block">
         <div class="flex flex-row items-center gap-5">
@@ -118,7 +119,7 @@
 
         <div class="mt-20 w-full">
           <h3 class="text-5 text-#000 text-center">Brush Size</h3>
-          <el-slider v-model="brushSize" size="large" :show-tooltip="false" :min="10" :max="50" class="w-full" />
+          <el-slider v-model="brushSize" size="large" :show-tooltip="false" :min="3" :max="50" class="w-full"/>
         </div>
         <el-button type="primary" class="mt-24 text-6 h-22 w-75" @click="downloadImage">Download HD free</el-button>
         <p class="mt-4 text-center text-18px fw-900 text-[#777777]">Full {{ w + "*" + h }}</p>
@@ -134,25 +135,25 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, onBeforeUnmount } from "vue";
+import {onMounted, ref, onBeforeUnmount} from "vue";
 import one from "@/assets/images/home/1.png";
 import two from "@/assets/images/home/2.jpg";
 import three from "@/assets/images/home/3.jpg";
 import four from "@/assets/images/home/4.jpg";
 import Mask from "@/components/Mask/index.vue";
-import { useRoute } from "vue-router";
+import {useRoute} from "vue-router";
 import bg1 from "@/assets/images/detail/bg-1.jpg";
 import bg2 from "@/assets/images/detail/bg-2.jpg";
 import bg3 from "@/assets/images/detail/bg-3.jpg";
 import bg4 from "@/assets/images/detail/bg-4.jpg";
 import bg5 from "@/assets/images/detail/bg-5.jpg";
 
-import useFile, { Action } from "@/hooks/useFile";
+import useFile, {Action} from "@/hooks/useFile";
 import useSnapshot from "@/hooks/useSnapshot";
 // import {removeBackGround} from "@/api/modules/ai"
 
-const { handleAction } = useFile();
-const { getLastDrawData, getLength, pushDrawData, clearDrawData, popDrawData } = useSnapshot("drawStack");
+const {handleAction} = useFile();
+const {getLastDrawData, getLength, pushDrawData, clearDrawData, popDrawData} = useSnapshot("drawStack");
 const {
   getLastDrawData: getSubLastDrawData,
   getLength: getSubLength,
@@ -207,14 +208,19 @@ const imgArr = [one, two, three, four];
 /* compare */
 const compare = ref("after");
 const brushSize = ref(30);
+
+const canvasRef = ref();
+// 创建一个mark canvas图层 进行涂抹等操作
+const markRef = ref();
 onMounted(async () => {
 
   // index静态图片 from上传图片
-  const { index, from } = route.query;
-
+  const {index, from} = route.query;
+  markRef.value = document.createElement('canvas');
+  // document.body.appendChild(markRef.value);
   await clearSubData();
   if (from) {
-    renderCanvas();
+    renderCanvas('first');
   } else {
     // 清理数据
     await clearDrawData();
@@ -259,16 +265,19 @@ const readImportedImage = (img, action) => {
     .then(response => response.blob())
     .then(async blob => {
       // 上传图片并绘制
-      handleAction(blob, action, renderCanvas);
+      handleAction(blob, action, getCanvas,1);
     })
     .catch(error => console.error("Error reading imported image:", error));
 };
 
 /* upload */
 const handleBeforeUpload = file => {
-  handleAction(file, Action["UPLOAD"], renderCanvas);
+  handleAction(file, Action["UPLOAD"], getCanvas,1);
   return false;
 };
+async function getCanvas () {
+  renderCanvas('first')
+}
 
 /* radio */
 const handleRadioChange = val => {
@@ -313,13 +322,12 @@ const handlePicClick = item => {
 };
 
 /* canvas */
-const canvasRef = ref();
 
 const w = ref(0);
 const h = ref(0);
 
 const renderBefore = async () => {
-  const { main } = await getLastDrawData();
+  const {main} = await getLastDrawData();
 
   const canvas = canvasRef.value;
   const ctx = canvas.getContext("2d");
@@ -361,7 +369,7 @@ const renderBefore = async () => {
   ctx.putImageData(mainImageData, 0, 0);
 };
 
-const renderCanvasWithBg = async (main, mask, color, draw, bg, restore) => {
+const renderCanvasWithBg = async (main, mask, color, draw, bg, restore, result: any) => {
   const canvas = canvasRef.value;
   const ctx = canvas.getContext("2d");
   const maskImage = new Image();
@@ -443,34 +451,34 @@ const renderCanvasWithBg = async (main, mask, color, draw, bg, restore) => {
     }
   };
 
-  if (isErase.value) {
-    if (restore) {
-      for (let k = 0; k < restore.length; k++) {
-        applyBrush(mainImageData.data, restore[k].path, restore[k].brush, copyData.data);
-      }
-    }
-    if (draw) {
-      for (let k = 0; k < draw.length; k++) {
-        applyBrush(mainImageData.data, draw[k].path, draw[k].brush, bgImageData.data, true);
-      }
-    }
-  } else {
-    if (draw) {
-      for (let k = 0; k < draw.length; k++) {
-        applyBrush(mainImageData.data, draw[k].path, draw[k].brush, bgImageData.data, true);
-      }
-    }
-    if (restore) {
-      for (let k = 0; k < restore.length; k++) {
-        applyBrush(mainImageData.data, restore[k].path, restore[k].brush, copyData.data);
-      }
-    }
-  }
+  // if (isErase.value) {
+  //   if (restore) {
+  //     for (let k = 0; k < restore.length; k++) {
+  //       applyBrush(mainImageData.data, restore[k].path, restore[k].brush, copyData.data);
+  //     }
+  //   }
+  //   if (draw) {
+  //     for (let k = 0; k < draw.length; k++) {
+  //       applyBrush(mainImageData.data, draw[k].path, draw[k].brush, bgImageData.data, true);
+  //     }
+  //   }
+  // } else {
+  //   if (draw) {
+  //     for (let k = 0; k < draw.length; k++) {
+  //       applyBrush(mainImageData.data, draw[k].path, draw[k].brush, bgImageData.data, true);
+  //     }
+  //   }
+  //   if (restore) {
+  //     for (let k = 0; k < restore.length; k++) {
+  //       applyBrush(mainImageData.data, restore[k].path, restore[k].brush, copyData.data);
+  //     }
+  //   }
+  // }
 
   ctx.putImageData(mainImageData, 0, 0);
 };
 
-const renderCanvasNormal = async (main, mask, color, draw, bg, restore) => {
+const renderCanvasNormal = async (main, mask, color, draw, bg, restore, result, isFirst: boolean) => {
   const canvas = canvasRef.value;
   const ctx = canvas.getContext("2d");
   const maskImage = new Image();
@@ -486,8 +494,15 @@ const renderCanvasNormal = async (main, mask, color, draw, bg, restore) => {
   h.value = canvasHeight;
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
+
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
+
+  if(isFirst){
+    const markCanvas = markRef.value;
+    markCanvas.width = canvasWidth;
+    markCanvas.height = canvasHeight;
+  }
 
   const mainAspectRatio = mainImage.width / mainImage.height;
   const canvasAspectRatio = canvasWidth / canvasHeight;
@@ -506,85 +521,42 @@ const renderCanvasNormal = async (main, mask, color, draw, bg, restore) => {
     offsetY = 0;
   }
 
-  ctx.drawImage(maskImage, offsetX, offsetY, drawWidth, drawHeight);
-
+  ctx.drawImage(mainImage, offsetX, offsetY, drawWidth, drawHeight);
   const mainImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   const copyData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   ctx.drawImage(maskImage, offsetX, offsetY, drawWidth, drawHeight);
 
   const maskImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  // for (let i = 0; i < mainImageData.data.length; i += 4) {
-  //   if (maskImageData.data[i] === 0 && maskImageData.data[i + 1] === 0) {
-  //     if (color) {
-  //       mainImageData.data[i] = color[0];
-  //       mainImageData.data[i + 1] = color[1];
-  //       mainImageData.data[i + 2] = color[2];
-  //     } else {
-  //       mainImageData.data[i + 3] = 0;
-  //     }
-  //   }
-  // }
-  // 笔刷
-  const applyBrush = (data, path, brush, _data, isDraw?) => {
-    const radius = Math.floor(brush / 2);
-    for (let i = 0; i < path.length; i++) {
-      const x = Math.floor(path[i].x);
-      const y = Math.floor(path[i].y);
-      for (let dx = -radius; dx <= radius; dx++) {
-        for (let dy = -radius; dy <= radius; dy++) {
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance <= radius) {
-            const nx = x + dx;
-            const ny = y + dy;
-            if (nx >= 0 && nx < canvas.width && ny >= 0 && ny < canvas.height) {
-              const index = (ny * canvas.width + nx) * 4;
-              if (isDraw) {
-                if (_data) {
-                  data[index] = _data[0];
-                  data[index + 1] = _data[1];
-                  data[index + 2] = _data[2];
-                } else {
-                  data[index + 3] = 0;
-                }
-              } else {
-                data[index] = _data[index];
-                data[index + 1] = _data[index + 1];
-                data[index + 2] = _data[index + 2];
-                data[index + 3] = _data[index + 3];
-              }
-            }
-          }
-        }
-      }
-    }
-  };
-  // 擦除
-  if (isErase.value) {
-    if (restore) {
-      for (let k = 0; k < restore.length; k++) {
-        applyBrush(mainImageData.data, restore[k].path, restore[k].brush, copyData.data);
-      }
-    }
-    if (draw) {
-      for (let k = 0; k < draw.length; k++) {
-        applyBrush(mainImageData.data, draw[k].path, draw[k].brush, color, true);
-      }
-    }
-  } else {
-    if (draw) {
-      for (let k = 0; k < draw.length; k++) {
-        applyBrush(mainImageData.data, draw[k].path, draw[k].brush, color, true);
-      }
-    }
-    if (restore) {
-      for (let k = 0; k < restore.length; k++) {
-        applyBrush(mainImageData.data, restore[k].path, restore[k].brush, copyData.data);
+  const applyBrush = async ()=>{
+    // 当恢复时 需要判断是
+    const long = result.length;
+    for (let i = 3; i < result[long-1].data.length; i += 4){
+      // 当像素点是灰色时 是涂抹
+      if( result[long-1].data[i-1] > 100){
+        maskImageData.data[i] = 0
+      }else if( result[long-1].data[i] !== 0){
+      // 恢复时
+        maskImageData.data[i] =  mainImageData.data[i]
+        maskImageData.data[i-1] =  mainImageData.data[i-1]
+        maskImageData.data[i-2] =  mainImageData.data[i-2]
+        maskImageData.data[i-3] =  mainImageData.data[i-3]
+        // if(maskImageData.data[i] === 0){
+        //
+        // }
       }
     }
   }
 
-  ctx.putImageData(mainImageData, 0, 0);
+  // 擦除 笔刷
+  if (isErase.value || isRestore.value) {
+    // 将涂抹图层与去背景图片对比 是涂抹就设置透明度变0
+    applyBrush()
+  }
+
+  // ctx.putImageData(mainImageData, 0, 0);
+  ctx.putImageData(maskImageData, 0, 0);
 };
 
 const isRecallDisable = ref(false);
@@ -593,7 +565,7 @@ const isRedoDisable = ref(true);
 async function renderCanvas(flag?) {
   let target;
   // flag判断是否撤回
-  if (flag) {
+  if (flag && flag!=='first') {
     target = await getSubLastDrawData();
     await pushDrawData(await popSubDrawData());
   } else {
@@ -610,12 +582,11 @@ async function renderCanvas(flag?) {
   } else {
     isRecallDisable.value = false;
   }
-  const { main, mask, color, draw, bg, restore } = target;
-  console.log(target,'jinrujiem');
+  const {main, mask, color, draw, bg, restore,result} = target;
 
   if (bg) {
-    renderCanvasWithBg(main, mask, color, draw, bg, restore);
-  } else renderCanvasNormal(main, mask, color, draw, bg, restore);
+    renderCanvasWithBg(main, mask, color, draw, bg, restore,result);
+  } else renderCanvasNormal(main, mask, color, draw, bg, restore,result,flag === 'first');
 }
 
 const imgLoaded = (img): Promise<void> => {
@@ -668,41 +639,75 @@ const getClipArea = (canvas, e) => {
   };
 };
 let path = [];
-
+/**
+ * 鼠标滑动涂抹
+  */
 function mouseHandler(e) {
   const canvas = canvasRef.value;
   const ctx = canvas.getContext("2d");
+  const markCanvas = markRef.value;
+  const markCtx = markCanvas.getContext("2d");
   e.preventDefault();
   if (e.type == "mousedown") {
     path = [];
     canvas.addEventListener("mousemove", mouseHandler);
     canvas.addEventListener("mouseup", mouseHandler);
-    ctx.strokeStyle = "#5e6ff022";
 
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = "#f67a71";
     ctx.lineWidth = brushSize.value; // 设置画笔宽度
     ctx.lineCap = "round"; // 设置线条端点样式
     ctx.lineJoin = "round"; // 设置线条连接处样式
     ctx.save();
-    ctx.beginPath();
+    // ctx.beginPath();
 
-    const { x, y } = getClipArea(canvas, e);
+    if( !isErase.value){
+      // 设置透明度
+      markCtx.globalAlpha = 0.2; // 可以调整透明度
+      markCtx.strokeStyle = "#000000";
+
+      // // 设置组合操作，使得重叠区域变透明
+      // markCtx.globalCompositeOperation = 'destination-out';
+    }else{
+      markCtx.globalAlpha = 1; // 可以调整透明度
+      markCtx.strokeStyle = "#C8C8C8";
+
+      // markCtx.globalCompositeOperation = 'source-over';
+    }
+    markCtx.lineWidth = brushSize.value; // 设置画笔宽度
+    markCtx.lineCap = "round"; // 设置线条端点样式
+    markCtx.lineJoin = "round"; // 设置线条连接处样式
+    markCtx.save();
+    markCtx.beginPath();
+
+    const {x, y} = getClipArea(canvas, e);
 
     ctx.moveTo(x, y);
-    path.push({ x, y });
+    markCtx.moveTo(x, y);
+    path.push({x, y});
   } else if (e.type === "mouseup" || e.type === "mouseout") {
     canvas.removeEventListener("mousemove", mouseHandler);
     canvas.removeEventListener("mouseup", mouseHandler);
     //draw
-    if (isErase.value) {
-      handleAction({ path, brush: brushSize.value }, Action["DRAW"], renderCanvas);
-    } else {
-      handleAction({ path, brush: brushSize.value }, Action["RESTORE"], renderCanvas);
-    }
+    // if (isErase.value) {
+    //   handleAction({path, brush: brushSize.value}, Action["DRAW"], renderCanvas);
+    // } else {
+    //   handleAction({path, brush: brushSize.value}, Action["RESTORE"], renderCanvas);
+    // }
+    const data = markCtx.getImageData(0, 0, canvas.width, canvas.height);
+    handleAction(data, Action["RESULT"], renderCanvas);
+    // console.log(data)
+    // handleAction(data, Action["RESTORE"], );
+
   } else {
-    const { x, y } = getClipArea(canvas, e);
+    const {x, y} = getClipArea(canvas, e);
     ctx.lineTo(x, y);
     ctx.stroke();
-    path.push({ x, y });
+
+    markCtx.lineTo(x, y);
+    markCtx.stroke();
+    markCtx.path = true;
+    path.push({x, y});
   }
 }
 
@@ -879,4 +884,5 @@ const handleRestoreClick = () => {
   --el-slider-button-size: 20px;
   --el-slider-button-wrapper-size: 48px;
 }
+
 </style>

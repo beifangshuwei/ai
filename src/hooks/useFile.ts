@@ -14,7 +14,8 @@ export enum Action {
   RESTORE = 'restore',
   BG = 'bg', //read
   UPLOAD = 'upload',
-  COLOR = 'color'
+  COLOR = 'color',
+  RESULT = 'result' //存每次绘画的数据
 }
 // 对应的文件类型
 export enum ReadType {
@@ -29,12 +30,12 @@ export default () => {
     color = null,
     draw = null,
     bg = null,
-    restore = null;
+    restore = null,
+    result = null;
 
   const { pushDrawData, getDrawData, getLastDrawData } = useSnapshot('drawStack');
 
   const readBlob2Base64 = (file, type: ReadType, fn?): Promise<void> => {
-    console.log(file, type,'readBlob2Base64');
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = async function () {
@@ -58,9 +59,10 @@ export default () => {
     });
   };
 
-  const uploadImageApi = async (file, fn) => {
-    const formData = new FormData();
+  const uploadImageApi = async (file, fn, uploadType: any) => {
+       const formData = new FormData();
     formData.append('file', file);
+    formData.append('type', uploadType);
     // formData.append('model', 'isnet-general-use');
     // formData.append('a', 'true');
     // formData.append('af', '240');
@@ -69,11 +71,13 @@ export default () => {
     // formData.append('om', 'true');
     // formData.append('ppm', 'true');
     // 存一下原图
+    // const resultMain = await readImportedImage('https://img.photoes.ai/watered/202409260315142.jpg',ReadType['MAIN'])
     const result = (await uploadImage(formData)) || {};
     const resultMain = await readImportedImage(result.data,ReadType['MAIN'])
     // 存一下遮罩图
-    const result1=(await removeBackGround({ url:result.data })) || {};
+    const result1=(await removeBackGround({ url:result.data ,type:uploadType})) || {};
     const resultMASK =  readImportedImage(result1.data.img,ReadType['MASK'], fn)
+    // const resultMASK =  readImportedImage('https://img.photoes.ai/watered/water_img/20240926031515.png',ReadType['MASK'], fn)
 
   };
   // 转文件格式
@@ -91,25 +95,27 @@ export default () => {
 
   };
   // 对每种类型的按钮进行的操作
-  const handleAction = async (data: any, type: Action, fn?) => {
+  const handleAction = async (data: any, type: Action, fn?, uploadType?: any) => {
     if (type == Action['UPLOAD']) {
       // 存一下原图
-
-      uploadImageApi(data, fn);
+      uploadImageApi(data, fn, uploadType);
     } else if (type == Action['BG']) {
       readBlob2Base64(data, ReadType['BG'], fn);
-      console.log(data, 'store');
     } else if (type == Action['COLOR']) {
       //bg ,color 只替换本身
       await pushDrawData({ ...(await getLastDrawData()), color: data, bg: null });
-      fn && fn();
+      fn && fn('first');
     } else if (type == Action['DRAW']) {
       //draw,保留全部,增加 draw
       const arr = (await getLastDrawData()).draw || [];
       arr.push(data);
-      console.log(data, 'store');
-
       await pushDrawData({ ...(await getLastDrawData()), draw: arr });
+      fn && fn();
+    } else if (type == Action['RESULT']) {
+      //result,保留全部,增加 result
+      const arr = (await getLastDrawData()).result || [];
+      arr.push(data);
+      await pushDrawData({ ...(await getLastDrawData()), result: arr });
       fn && fn();
     } else {
       const arr = (await getLastDrawData()).restore || [];

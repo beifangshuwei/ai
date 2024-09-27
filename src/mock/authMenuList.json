@@ -44,9 +44,9 @@
       }
     },
     {
-      "path": "/deWatermark",
-      "name": "deWatermark",
-      "component": "/deWatermark/index",
+      "path": "/deWaterMark",
+      "name": "deWaterMark",
+      "component": "/deWaterMark/index",
       "meta": {
         "icon": "code-computer",
         "title": "detail",

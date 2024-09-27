@@ -56,7 +56,6 @@ export const useTable = (
    * */
   const getTableList = async () => {
     if (!api) return;
-    console.log(api, 'apiapiapi');
 
     try {
       // 先把初始化参数和分页参数放到总参数里面

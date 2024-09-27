@@ -38,16 +38,12 @@
             </button>
           </p>
         </div>
-        <el-button
-          class=" lg:flex items-center justify-center rounded-[8px] border border-black fw-800  lg:w-[100px]   text-16px transition"
-          @click="changeUrl('deWatermark')"
-        >去水印
-        </el-button>
-        <el-button
-          class=" lg:flex items-center justify-center rounded-[8px] border border-black fw-800  lg:w-[100px]   text-16px transition"
-          @click="dialogVisible = true"
-          >登录
-        </el-button>
+
+<!--        <el-button-->
+<!--          class=" lg:flex items-center justify-center rounded-[8px] border border-black fw-800  lg:w-[100px]   text-16px transition"-->
+<!--          @click="dialogVisible = true"-->
+<!--          >登录-->
+<!--        </el-button>-->
       </div>
     </header>
     <el-container class="flex-1 flex flex-col overflow-auto">

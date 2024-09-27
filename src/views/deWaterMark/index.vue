@@ -28,7 +28,8 @@
 
       </div>
       <div class="sidebar w-75 hidden lg:block">
-        <el-button type="primary" class="mt-24 text-6 h-22 w-75" @click="downLoad">{{ downloadImg ? "Download HD free" : "生成照片"
+        <el-button type="primary" class="mt-24 text-6 h-22 w-75" @click="downLoad">{{
+            downloadImg ? "Download HD free" : "生成照片"
           }}
         </el-button>
         <p class="mt-4 text-center text-18px fw-900 text-[#777777]">Full {{ w + "*" + h }}</p>
@@ -45,10 +46,22 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, onBeforeUnmount } from "vue";
-import { useRoute } from "vue-router";
+import {onMounted, ref, onBeforeUnmount} from "vue";
+import {useRoute} from "vue-router";
 
-import { uploadImage,removeBackGround } from '@/api/modules/ai';
+import {uploadImage, removeBackGround} from '@/api/modules/ai';
+import useFile, {Action} from "@/hooks/useFile";
+import useSnapshot from "@/hooks/useSnapshot";
+
+const {handleAction} = useFile();
+const {getDrawData,getLastDrawData, getLength, pushDrawData, clearDrawData, popDrawData} = useSnapshot("drawStack");
+const {
+  getLastDrawData: getSubLastDrawData,
+  getLength: getSubLength,
+  pushDrawData: pushSubDrawData,
+  popDrawData: popSubDrawData,
+  clearDrawData: clearSubData
+} = useSnapshot("subStack");
 
 const downloadImg = ref(true);
 const compare = ref("after");
@@ -56,8 +69,14 @@ const compare = ref("after");
 const resultMain = ref();
 const resultMark = ref();
 
-// onMounted(async () => {
-// });
+onMounted(async () => {
+   renderCanvas()
+});
+
+onBeforeUnmount(async () => {
+  await clearSubData();
+  await clearDrawData();
+});
 
 const isMask = ref(false);
 
@@ -72,26 +91,17 @@ const readImportedImage = (img) => {
 };
 
 /* upload */
-const handleBeforeUpload = file => {
-  // handleAction(file, Action["UPLOAD"], renderBefore);
-  getWmImg(file)
+const handleBeforeUpload = async file => {
+  await clearSubData();
+  await clearDrawData();
+  handleAction(file, Action["UPLOAD"], renderCanvas, 2);
+  // getWmImg(file)
   return false;
 };
 
 /* radio */
-const handleRadioChange = val => {
-  renderCanvas();
-};
-
-/**
- *上传图片 获取去水印图片
- */
-const getWmImg = async file => {
-  const result = (await uploadImage(file)) || {};
-  resultMain.value = await readImportedImage(result.data);
-  // 存一下遮罩图
-  const result1 = (await removeBackGround({ url: result.data })) || {};
-  resultMark.value = readImportedImage(result1.data.img);
+const handleRadioChange = async () => {
+ renderCanvas()
 };
 
 /* canvas */
@@ -100,33 +110,39 @@ const canvasRef = ref();
 const w = ref(0);
 const h = ref(0);
 
-const renderBefore = async () => {
+async function renderCanvas() {
+  let target;
+  target = await getDrawData();
+  const {main, mask, color, draw, bg, restore,result} = target[target.length-1];
+  drawCanvas(main, mask, color, draw, bg, restore,result);
+}
+
+const drawCanvas = async (main, mask, color, draw, bg, restore, result) => {
   const canvas = canvasRef.value;
-  const canvasDeMark = deMarkRef.value;
   const ctx = canvas.getContext("2d");
   ctx.save();
   const mainImage = new Image();
-  mainImage.src = compare.value === "after" ? resultMain.value : resultMark.value;
+  mainImage.src = compare.value === "after" ? mask :main;
   await imgLoaded(mainImage);
 
   const canvasWidth = mainImage.width;
   const canvasHeight = mainImage.height;
   w.value = canvasWidth;
   h.value = canvasHeight;
+
+  const scale = canvasHeight/500
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
-
-  canvasDeMark.width = canvasWidth;
-  canvasDeMark.height = canvasHeight;
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
   const mainAspectRatio = mainImage.width / mainImage.height;
   const canvasAspectRatio = canvasWidth / canvasHeight;
-  let drawWidth, drawHeight, offsetX, offsetY;
+  // let drawWidth, drawHeight, offsetX, offsetY;
 
-  ctx.drawImage(mainImage, offsetX, offsetY, drawWidth, drawHeight);
+  console.log(scale)
+  ctx.drawImage(mainImage, 0, 0, canvasWidth, canvasHeight);
 
   const mainImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 

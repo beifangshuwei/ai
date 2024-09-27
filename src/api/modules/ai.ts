@@ -1,7 +1,7 @@
 import request from "@/api";
 
-export const uploadImage = formdata => {
-  return request.post("https://ai.photoes.ai/user/img/updateImg", formdata
+export const uploadImage = formData => {
+  return request.post("https://ai.photoes.ai/user/img/updateImg", formData
     //   {
     //   responseType: 'blob'
     // }

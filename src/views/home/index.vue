@@ -6,6 +6,12 @@
         <p class="mt-2 px-8 text-center text-[#6E6F75] text-sm lg:text-xl lg:px-0 mb-8">
           {{ $t("home.hero.subtitle") }}
         </p>
+        <div class="flex justify-center mb-5">
+           <el-radio-group v-model="urlRadio" size="large" @change="changeUrl(urlRadio)">
+             <el-radio-button label="Remove Backgound" value="deBg" />
+             <el-radio-button label="deWatermark" value="deWaterMark" />
+           </el-radio-group>
+        </div>
         <div class="images mt-5 lg:mt-0 w-full">
           <el-upload
             :before-upload="handleBeforeUpload"
@@ -604,6 +610,10 @@ import one from "@/assets/images/home/1.png";
 import two from "@/assets/images/home/2.jpg";
 import three from "@/assets/images/home/3.jpg";
 import four from "@/assets/images/home/4.jpg";
+import wmOne from "@/assets/images/home/5.png"
+import wmTwo from "@/assets/images/home/6.png"
+import wmThree from "@/assets/images/home/7.png"
+import wmFour from "@/assets/images/home/8.png"
 import Mask from "@/components/Mask/index.vue";
 import { onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -625,20 +635,26 @@ const router = useRouter();
 const { handleAction } = useFile();
 const jump = () => {
   // 上传图片跳转
-  router.push({ path: "/detail", query: { from: 1 } });
+  if(urlRadio.value === 'deBg'){
+    router.push({ path: "/detail", query: { from: 1 } });
+  }else{
+    router.push({ path: "/deWaterMark", query: { from: 1 } });
+  }
 };
 const handleBeforeUpload = file => {
-  // 存之前的图片
-  handleAction(file, Action["UPLOAD"], jump);
+  const uploadType= urlRadio.value === 'deBg'?1:2
+    // 存之前的图片
+  handleAction(file, Action["UPLOAD"], jump,uploadType);
   // jump()
   return false;
 };
 
 const askList = ref([]);
 
-const imgArr = [one, two, three, four];
+const imgArr =  ref([one, two, three, four]);
 
 const isMask = ref(false);
+
 onMounted(async () => {
   userStore.setToken("xxx");
 
@@ -660,6 +676,19 @@ onBeforeUnmount(() => {
   document.removeEventListener("dragleave", hanleDragLeave);
 });
 
+/**
+ * 切换标签页
+ */
+const urlRadio  = ref('deBg')
+const changeUrl = (type) =>{
+  urlRadio.value = type;
+  if(type==='deBg'){
+    imgArr.value = [one, two, three, four];
+  }else {
+    imgArr.value = [wmOne, wmTwo, wmThree, wmFour];
+  }
+}
+
 const handleDragEnter = e => {
   e.preventDefault();
   e.stopPropagation();
@@ -670,7 +699,6 @@ const handleDragOver = e => {
   e.stopPropagation();
 };
 const hanleDragLeave = e => {
-  console.log(e.target.classList);
 
   e.preventDefault();
   if (e.target.classList.contains("mask")) {
@@ -680,7 +708,17 @@ const hanleDragLeave = e => {
 
 const handlePicClick = index => {
   //跳转 4个小图
-  router.push({ path: "/detail", query: { index } });
+  if(urlRadio.value === 'deBg'){
+    router.push({ path: "/detail", query: { index } });
+  }else{
+      fetch(imgArr.value[index])
+        .then(response => response.blob())
+        .then(async blob => {
+          // 上传图片并绘制
+          handleBeforeUpload(blob)
+        })
+        .catch(error => console.error("Error reading imported image:", error));
+    };
 };
 
 // 问答展开收起
@@ -688,6 +726,7 @@ const askListChangeFn = item => {
   const index = askList.value.indexOf(item);
   index !== -1 ? askList.value.splice(index, item) : askList.value.push(item);
 };
+
 </script>
 
 <style scoped lang="scss">
@@ -795,4 +834,5 @@ const askListChangeFn = item => {
 :deep(.el-upload) {
   width: 100%;
 }
+
 </style>

@@ -118,7 +118,6 @@ export default name => {
     const lastKey = allKeys[allKeys.length - 1];
     const lastData = await store.get(lastKey);
     await tx.done;
-    console.log(lastData);
     return lastData;
   };
 
