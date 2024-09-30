@@ -83,8 +83,8 @@ export default () => {
   // 转文件格式
   const readImportedImage = (img,type: ReadType, fn?) => {
 
-    const imgSrc = img.replace('https://img.photoes.ai/',"/downloadImage")
-    // let imgSrc = 'http://localhost:3000/downloadImage/watered/20240912105729dog.jpg'
+    // const imgSrc = img.replace('https://img.photoes.ai/',"/downloadImage")
+    let imgSrc = img
     fetch(imgSrc)
       .then(response => response.blob())
       .then(async blob => {
@@ -104,7 +104,7 @@ export default () => {
     } else if (type == Action['COLOR']) {
       //bg ,color 只替换本身
       await pushDrawData({ ...(await getLastDrawData()), color: data, bg: null });
-      fn && fn('first');
+      fn && fn();
     } else if (type == Action['DRAW']) {
       //draw,保留全部,增加 draw
       const arr = (await getLastDrawData()).draw || [];

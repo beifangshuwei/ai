@@ -1,28 +1,28 @@
 <template>
   <main class="main-content mx-auto flex max-w-300 flex-col gap-2.5 px-1 pt-9 px-5 lg:flex-row">
     <section class="editor">
-      <!--      <div class="sidebar w-40 hidden lg:flex">-->
-      <!--        <div class="color-picker">-->
-      <!--          <h3 class="ml-1">Color</h3>-->
-      <!--          <div class="colors">-->
-      <!--            <div-->
-      <!--              class="color cursor-pointer"-->
-      <!--              :style="{ backgroundColor: `rgb(${item[0]},${item[1]},${item[2]})` }"-->
-      <!--              v-for="(item, index) in colorArr"-->
-      <!--              :key="index"-->
-      <!--              @click="changeColor(item)"-->
-      <!--            ></div>-->
-      <!--          </div>-->
-      <!--        </div>-->
-      <!--        <div class="picture-picker">-->
-      <!--          <h3 class="ml-5">Picture</h3>-->
-      <!--          <div class="pictures">-->
-      <!--            <div class="picture" v-for="(item, index) in bgArr" :key="index">-->
-      <!--              <img :src="item" class="w-full h-full" @click="handlePicClick(item)" />-->
-      <!--            </div>-->
-      <!--          </div>-->
-      <!--        </div>-->
-      <!--      </div>-->
+      <div class="sidebar w-40 hidden lg:flex">
+        <div class="color-picker">
+          <h3 class="ml-1">Color</h3>
+          <div class="colors">
+            <div
+              class="color cursor-pointer"
+              :style="{ backgroundColor: `rgb(${item[0]},${item[1]},${item[2]})` }"
+              v-for="(item, index) in colorArr"
+              :key="index"
+              @click="changeColor(item)"
+            ></div>
+          </div>
+        </div>
+        <div class="picture-picker">
+          <h3 class="ml-5">Picture</h3>
+          <div class="pictures">
+            <div class="picture" v-for="(item, index) in bgArr" :key="index">
+              <img :src="item" class="w-full h-full" @click="handlePicClick(item)"/>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div>
         <section class="toolbar whitespace-nowrap justify-between lg:justify-center">
@@ -95,9 +95,9 @@
           </div>
         </div>
 
-<!--        <p class="my-20 whitespace-pre-wrap text-center text-14px font-medium text-[#777777ee]">-->
-<!--          Don't forget to download your file. Auto-deletes in 30 minutes.-->
-<!--        </p>-->
+        <!--        <p class="my-20 whitespace-pre-wrap text-center text-14px font-medium text-[#777777ee]">-->
+        <!--          Don't forget to download your file. Auto-deletes in 30 minutes.-->
+        <!--        </p>-->
       </div>
       <div class="sidebar w-75 hidden lg:block">
         <div class="flex flex-row items-center gap-5">
@@ -260,22 +260,23 @@ onBeforeUnmount(async () => {
   document.removeEventListener("dragleave", hanleDragLeave);
 });
 
-const readImportedImage = (img, action) => {
+const readImportedImage = (img, action, fn?) => {
   fetch(img)
     .then(response => response.blob())
     .then(async blob => {
       // 上传图片并绘制
-      handleAction(blob, action, getCanvas,1);
+      handleAction(blob, action, fn ? fn && fn() : getCanvas, 1);
     })
     .catch(error => console.error("Error reading imported image:", error));
 };
 
 /* upload */
 const handleBeforeUpload = file => {
-  handleAction(file, Action["UPLOAD"], getCanvas,1);
+  handleAction(file, Action["UPLOAD"], getCanvas, 1);
   return false;
 };
-async function getCanvas () {
+
+async function getCanvas() {
   renderCanvas('first')
 }
 
@@ -369,6 +370,8 @@ const renderBefore = async () => {
   ctx.putImageData(mainImageData, 0, 0);
 };
 
+/*
+* */
 const renderCanvasWithBg = async (main, mask, color, draw, bg, restore, result: any) => {
   const canvas = canvasRef.value;
   const ctx = canvas.getContext("2d");
@@ -410,72 +413,59 @@ const renderCanvasWithBg = async (main, mask, color, draw, bg, restore, result: 
   ctx.drawImage(bgImage, offsetX, offsetY, drawWidth, drawHeight);
   const bgImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(mainImage, offsetX, offsetY, drawWidth, drawHeight);
   const mainImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const copyData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(maskImage, offsetX, offsetY, drawWidth, drawHeight);
   const maskImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  for (let i = 0; i < mainImageData.data.length; i += 4) {
-    if (maskImageData.data[i] === 0 && maskImageData.data[i + 1] === 0) {
-      mainImageData.data[i] = bgImageData.data[i];
-      mainImageData.data[i + 1] = bgImageData.data[i + 1];
-      mainImageData.data[i + 2] = bgImageData.data[i + 2];
+  for (let i = 3; i < maskImageData.data.length; i += 4) {
+    // console.log(i)
+    if (maskImageData.data[i] === 0) {
+      maskImageData.data[i] = bgImageData.data[i]
+      maskImageData.data[i - 1] = bgImageData.data[i - 1]
+      maskImageData.data[i - 2] = bgImageData.data[i - 2]
+      maskImageData.data[i - 3] = bgImageData.data[i - 3]
+
     }
   }
+
   // 笔刷 恢复
-  const applyBrush = (data, path, brush, sourceData, isDraw?) => {
-    const radius = Math.floor(brush / 2);
-    for (let i = 0; i < path.length; i++) {
-      const x = Math.floor(path[i].x);
-      const y = Math.floor(path[i].y);
-      for (let dx = -radius; dx <= radius; dx++) {
-        for (let dy = -radius; dy <= radius; dy++) {
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance <= radius) {
-            const nx = x + dx;
-            const ny = y + dy;
-            if (nx >= 0 && nx < canvas.width && ny >= 0 && ny < canvas.height) {
-              const index = (ny * canvas.width + nx) * 4;
-              data[index] = sourceData[index];
-              data[index + 1] = sourceData[index + 1];
-              data[index + 2] = sourceData[index + 2];
-              if (!isDraw) {
-                data[index + 3] = sourceData[index + 3];
-              }
-            }
-          }
+  const applyBrush = async () => {
+    // 当恢复时 需要判断是恢复哪个区域
+    const long = result.length;
+    for (let i = 3; i < result[long - 1].data.length; i += 4) {
+      // 当像素点是灰色时 是涂抹
+      if (result[long - 1].data[i - 1] > 100) {
+        // 当背景为默认背景涂抹就变透明 当背景为设定背景时变成设定背景
+        maskImageData.data[i] = 0
+        if (bg) {
+          maskImageData.data[i] = bgImageData.data[i]
+          maskImageData.data[i - 1] = bgImageData.data[i-1]
+          maskImageData.data[i - 2] = bgImageData.data[i-2]
+          maskImageData.data[i - 3] = bgImageData.data[i-3]
         }
+      } else if (result[long - 1].data[i] !== 0) {
+        // 恢复时
+        maskImageData.data[i] = mainImageData.data[i]
+        maskImageData.data[i - 1] = mainImageData.data[i - 1]
+        maskImageData.data[i - 2] = mainImageData.data[i - 2]
+        maskImageData.data[i - 3] = mainImageData.data[i - 3]
       }
     }
-  };
+  }
 
-  // if (isErase.value) {
-  //   if (restore) {
-  //     for (let k = 0; k < restore.length; k++) {
-  //       applyBrush(mainImageData.data, restore[k].path, restore[k].brush, copyData.data);
-  //     }
-  //   }
-  //   if (draw) {
-  //     for (let k = 0; k < draw.length; k++) {
-  //       applyBrush(mainImageData.data, draw[k].path, draw[k].brush, bgImageData.data, true);
-  //     }
-  //   }
-  // } else {
-  //   if (draw) {
-  //     for (let k = 0; k < draw.length; k++) {
-  //       applyBrush(mainImageData.data, draw[k].path, draw[k].brush, bgImageData.data, true);
-  //     }
-  //   }
-  //   if (restore) {
-  //     for (let k = 0; k < restore.length; k++) {
-  //       applyBrush(mainImageData.data, restore[k].path, restore[k].brush, copyData.data);
-  //     }
-  //   }
-  // }
+  // 擦除 笔刷
+  if (isErase.value || isRestore.value) {
+    // 将涂抹图层与去背景图片对比 是涂抹就设置透明度变0
+    applyBrush()
+  }
 
-  ctx.putImageData(mainImageData, 0, 0);
+  // ctx.putImageData(mainImageData, 0, 0);
+  ctx.putImageData(maskImageData, 0, 0);
 };
 
 const renderCanvasNormal = async (main, mask, color, draw, bg, restore, result, isFirst: boolean) => {
@@ -498,7 +488,8 @@ const renderCanvasNormal = async (main, mask, color, draw, bg, restore, result, 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
-  if(isFirst){
+  if (isFirst) {
+    console.log(121212)
     const markCanvas = markRef.value;
     markCanvas.width = canvasWidth;
     markCanvas.height = canvasHeight;
@@ -528,23 +519,51 @@ const renderCanvasNormal = async (main, mask, color, draw, bg, restore, result, 
   ctx.drawImage(maskImage, offsetX, offsetY, drawWidth, drawHeight);
 
   const maskImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  if (color) {
+    // console.log(111111111111,'color',color)
+    for (let i = 3; i < maskImageData.data.length; i += 4) {
+      // console.log(i)
+      if (maskImageData.data[i] === 0) {
+        maskImageData.data[i] = 255
+        maskImageData.data[i - 1] = color[2]
+        maskImageData.data[i - 2] = color[1]
+        maskImageData.data[i - 3] = color[0]
+      }
+    }
+  }
+  // if(bg){
+  //   for (let i = 3; i < maskImageData.data.length; i += 4) {
+  //     // console.log(i)
+  //     if (maskImageData.data[i] === 0) {
+  //
+  //       maskImageData.data[i] = bgImageData.data[i]
+  //       maskImageData.data[i - 1] = bgImageData.data[2]
+  //       maskImageData.data[i - 2] = bgImageData.data[1]
+  //       maskImageData.data[i - 3] = bgImageData.data[0]
+  //     }
+  //   }
+  // }
 
-  const applyBrush = async ()=>{
+  const applyBrush = async () => {
     // 当恢复时 需要判断是
     const long = result.length;
-    for (let i = 3; i < result[long-1].data.length; i += 4){
+    for (let i = 3; i < result[long - 1].data.length; i += 4) {
       // 当像素点是灰色时 是涂抹
-      if( result[long-1].data[i-1] > 100){
+      if (result[long - 1].data[i - 1] > 100) {
+        // 当背景为默认背景涂抹就变透明 当背景为设定背景时变成设定背景
         maskImageData.data[i] = 0
-      }else if( result[long-1].data[i] !== 0){
-      // 恢复时
-        maskImageData.data[i] =  mainImageData.data[i]
-        maskImageData.data[i-1] =  mainImageData.data[i-1]
-        maskImageData.data[i-2] =  mainImageData.data[i-2]
-        maskImageData.data[i-3] =  mainImageData.data[i-3]
-        // if(maskImageData.data[i] === 0){
-        //
-        // }
+        if (color) {
+          maskImageData.data[i] = 255
+          maskImageData.data[i - 1] = color[2]
+          maskImageData.data[i - 2] = color[1]
+          maskImageData.data[i - 3] = color[0]
+        }
+      } else if (result[long - 1].data[i] !== 0) {
+        // 恢复时
+        maskImageData.data[i] = mainImageData.data[i]
+        maskImageData.data[i - 1] = mainImageData.data[i - 1]
+        maskImageData.data[i - 2] = mainImageData.data[i - 2]
+        maskImageData.data[i - 3] = mainImageData.data[i - 3]
       }
     }
   }
@@ -565,7 +584,7 @@ const isRedoDisable = ref(true);
 async function renderCanvas(flag?) {
   let target;
   // flag判断是否撤回
-  if (flag && flag!=='first') {
+  if (flag && flag !== 'first') {
     target = await getSubLastDrawData();
     await pushDrawData(await popSubDrawData());
   } else {
@@ -582,11 +601,13 @@ async function renderCanvas(flag?) {
   } else {
     isRecallDisable.value = false;
   }
-  const {main, mask, color, draw, bg, restore,result} = target;
+  const {main, mask, color, draw, bg, restore, result} = target;
 
   if (bg) {
     renderCanvasWithBg(main, mask, color, draw, bg, restore,result);
-  } else renderCanvasNormal(main, mask, color, draw, bg, restore,result,flag === 'first');
+  } else {
+    renderCanvasNormal(main, mask, color, draw, bg, restore, result, flag === 'first');
+  }
 }
 
 const imgLoaded = (img): Promise<void> => {
@@ -639,9 +660,10 @@ const getClipArea = (canvas, e) => {
   };
 };
 let path = [];
+
 /**
  * 鼠标滑动涂抹
-  */
+ */
 function mouseHandler(e) {
   const canvas = canvasRef.value;
   const ctx = canvas.getContext("2d");
@@ -661,14 +683,14 @@ function mouseHandler(e) {
     ctx.save();
     // ctx.beginPath();
 
-    if( !isErase.value){
+    if (!isErase.value) {
       // 设置透明度
       markCtx.globalAlpha = 0.2; // 可以调整透明度
       markCtx.strokeStyle = "#000000";
 
       // // 设置组合操作，使得重叠区域变透明
       // markCtx.globalCompositeOperation = 'destination-out';
-    }else{
+    } else {
       markCtx.globalAlpha = 1; // 可以调整透明度
       markCtx.strokeStyle = "#C8C8C8";
 

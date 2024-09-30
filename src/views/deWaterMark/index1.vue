@@ -133,7 +133,6 @@ import bg3 from "@/assets/images/detail/bg-3.jpg";
 import bg4 from "@/assets/images/detail/bg-4.jpg";
 import bg5 from "@/assets/images/detail/bg-5.jpg";
 
-import useFile, { Action } from "@/hooks/userDe";
 import useSnapshot from "@/hooks/useSnapshot";
 // import {removeBackGround} from "@/api/modules/ai"
 
